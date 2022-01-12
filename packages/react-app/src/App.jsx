@@ -25,7 +25,8 @@ import {
   NetworkSwitch,
   ListPunks,
   MyPunks,
-  OthersPunks
+  OthersPunks,
+  CustomPunk
 } from "./components";
 import { NETWORKS, ALCHEMY_KEY } from "./constants";
 import externalContracts from "./contracts/external_contracts";
@@ -259,6 +260,9 @@ function App(props) {
         <Menu.Item key="/punkslist">
           <Link to="/punkslist">Mint Punks</Link>
         </Menu.Item>
+        <Menu.Item key="/custompunk">
+          <Link to="/custompunk">Custom Punk</Link>
+        </Menu.Item>
         <Menu.Item key="/mypunks">
           <Link to="/mypunks">My Punks</Link>
         </Menu.Item>
@@ -271,6 +275,10 @@ function App(props) {
         <Route exact path="/punkslist">
           {/* pass in any web3 props to this Home component. For example, yourLocalBalance */}
           <ListPunks signer={userSigner} provider={localProvider} address={address} externalContracts={externalContracts} selectedChainId={selectedChainId}  />
+        </Route>
+        <Route exact path="/custompunk">
+          {/* pass in any web3 props to this Home component. For example, yourLocalBalance */}
+          <CustomPunk signer={userSigner} provider={localProvider} address={address} externalContracts={externalContracts} selectedChainId={selectedChainId}  />
         </Route>
         <Route exact path="/mypunks" >
           {/* pass in any web3 props to this Home component. For example, yourLocalBalance */}

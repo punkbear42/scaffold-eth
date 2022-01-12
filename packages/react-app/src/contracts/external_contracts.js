@@ -1333,7 +1333,7 @@ module.exports = {
   4: {  
       contracts :{
         GAN_PUNK: {
-          address: "0x80EFA6936a6759ffDF83a1511bB14c10E6CB76a2",
+          address: "0x6AE5B2C8A3e286545ab255BE9e45811deA360fd0",
           abi: GAN_PUNK_ABI
         }
       }    

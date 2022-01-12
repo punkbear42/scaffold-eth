@@ -22,6 +22,8 @@ export default function MyPunks(props) {
 
   useEffect(async function () {
     try {
+      if (!gan_contract) return setErrorMessage('No network selected in your wallet')
+      setErrorMessage('')
       const model = await tf.loadLayersModel(window.location.origin + '/model.json')
       setModel(model)
       let contract = new ethers.Contract(gan_contract.address, gan_contract.abi, props.signer)
@@ -62,7 +64,7 @@ export default function MyPunks(props) {
   }, [punks])
 
   return (
-    <div><ToastContainer /><div>{punks.length} punk(s)</div><ImageList cols={5} sx={{ width: 5*24*3, margin: 'auto' }} >
+    <div><ToastContainer /><div>{punks.length} punk(s)</div><ImageList cols={5} sx={{ width: 5*24*6, margin: 'auto' }} >
       {punks.map((item, index) => (
         <ImageListItem className="mypunks">
           <canvas index={index} width="24" height="24" ></canvas>   

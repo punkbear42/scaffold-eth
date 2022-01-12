@@ -6,6 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
+import * as d3 from "d3"
 
 import * as tf from '@tensorflow/tfjs';
 
@@ -24,20 +25,28 @@ export default function ListPunks(props) {
     console.error(e)
   }
 
-  const randomPunks = () => {
+  function loadGraphRecursive(input) {
+    document.getElementById('graph').innerHTML = ''
+    loadGraph(input, (input) => {
+      setPunks([input])      
+    }, (input) => {
+      loadGraphRecursive(input)
+    })
+  }
+
+  const randomPunk = () => {
     let input = []
-    for (let k = 0 ; k < 20; k++) {
-      input[k] = []
-      for (let i = 0 ; i < 100; i++) {
-        input[k][i] = randn_bm()
-      }      
+    for (let i = 0 ; i < 100; i++) {
+      input[i] = randn_bm()
     }
-    setPunks(input)
+    loadGraphRecursive(input)
+    setPunks([input])
   }
   useEffect(async function () {
     const model = await tf.loadLayersModel(window.location.origin + '/model.json')
     setModel(model)
-    randomPunks()
+    randomPunk()
+    
   }, [])
 
   useEffect(async function () {    
@@ -79,7 +88,8 @@ export default function ListPunks(props) {
 
   return (
     <div>Select punks that you want to mint: <div>The first selected punk will be minted to your personal address.</div>
-    <div>The punk contract itself will be the owner of the two other selected punks.</div><ToastContainer />
+    <div>The punk contract itself will be the owner of the two other selected punks.</div>
+    <ToastContainer />
     <ImageList cols={5} sx={{ width: 5*24*6, margin: 'auto' }}>
       {punks.map((item, index) => (
         <ImageListItem className="punks mypunks">
@@ -104,7 +114,8 @@ export default function ListPunks(props) {
         </ImageList>
         <ButtonGroup sx={{ marginTop: 2 }} >
         <Button variant="contained" onClick={() => {
-        randomPunks()
+          document.getElementById('graph').innerHTML = ''
+          randomPunk()
         }}>Refresh</Button>
         <Button variant="contained" onClick={() => {
           setPackaged([])
@@ -126,8 +137,126 @@ export default function ListPunks(props) {
         }}>Mint</Button>
         </ButtonGroup>
         <div>{errorMessage}</div>
+        <svg id="graph" width="1500" height="500"></svg>
         </div>
       </div>
   </div>
   );
 }
+
+
+function loadGraph (points, cbInput, cbReload) {
+  var svg = d3.select("svg"),
+  margin = {top: 20, right: 20, bottom: 30, left: 50},
+  width = +svg.attr("width") - margin.left - margin.right,
+  height = +svg.attr("height") - margin.top - margin.bottom;
+  
+  points = points.map((el, index) => {
+    return [index, el]
+  })
+
+  /*
+  let points = d3.range(1, 10).map(function(i) {
+    return [i * width / 10, 50 + Math.random() * (height - 100)];
+  });
+  */
+
+  var x = d3.scaleLinear()
+    .rangeRound([0, width]);
+
+  var y = d3.scaleLinear()
+    .rangeRound([height, 0]);
+
+  var xAxis = d3.axisBottom(x),
+    yAxis = d3.axisLeft(y);
+
+  let drag = d3.drag()
+        .on('start', dragstarted)
+        .on('drag', dragged)
+        .on('end', dragended);
+        
+  svg.append('rect')
+    .attr('class', 'zoom')
+    .attr('cursor', 'move')
+    .attr('fill', 'none')
+    .attr('pointer-events', 'all')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+
+  var focus = svg.append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  x.domain(d3.extent(points, function(d) { return d[0]; }));
+  y.domain(d3.extent(points, function(d) { return d[1]; }));
+
+  var line = d3.line()
+    .x(function(d) { return x(d[0]); })
+    .y(function(d) { return y(d[1]); });
+
+  focus.append("path")
+    .datum(points)
+    .attr("fill", "none")
+    .attr("stroke", "steelblue")
+    .attr("stroke-linejoin", "round")
+    .attr("stroke-linecap", "round")
+    .attr("stroke-width", 1.5)
+    .attr("d", line);
+    
+
+  focus.selectAll('circle')
+    .data(points)
+    .enter()
+    .append('circle')
+    .attr('r', 5.0)
+    .attr('cx', function(d) { return x(d[0]);  })
+    .attr('cy', function(d) { return y(d[1]); })
+    .style('cursor', 'pointer')
+    .style('fill', 'steelblue');
+
+  focus.selectAll('circle')
+        .call(drag);
+
+  focus.append('g')
+    .attr('class', 'axis axis--x')
+    .attr('transform', 'translate(0,' + height + ')')
+    .call(xAxis);
+    
+  focus.append('g')
+    .attr('class', 'axis axis--y')
+    .call(yAxis);
+
+    let currentCoord
+  
+  function dragstarted(d) {
+      d3.select(this).raise().classed('active', true);
+      currentCoord = {
+        x:d.x,
+        y:d.y
+      }
+  }
+
+  
+  
+  function dragged(d) {      
+      d[0] = currentCoord.x
+      d[1] = d.y
+      d3.select(this)
+          .attr('cx', currentCoord.x) // back to pixels
+          .attr('cy', d.y)
+      // focus.selectAll('path').attr('d', line);
+      points[d.subject[0]] = [d.subject[0], y.invert(d.y)]
+      cbInput(points.map((el) => { return el[1] }))
+      
+  }
+  
+  function dragended(d) {
+    points[d.subject[0]] = [d.subject[0], y.invert(d.y)]
+    cbReload(points.map((el) => { return el[1] }))
+      
+      d3.select(this).classed('active', false);
+  }
+
+}
+
+

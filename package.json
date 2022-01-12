@@ -71,6 +71,7 @@
     "@emotion/styled": "^11.6.0",
     "@ensdomains/react-ens-address": "0.0.30",
     "@mui/material": "^5.2.5",
+    "d3": "^7.3.0",
     "react-toastify": "^8.1.0"
   },
   "devDependencies": {

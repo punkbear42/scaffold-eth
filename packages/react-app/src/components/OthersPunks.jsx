@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import ImageList from '@mui/material/ImageList'
 import ImageListItem from '@mui/material/ImageListItem'
 import { useEffect } from "react";
@@ -15,6 +15,7 @@ export default function OthersPunks(props) {
   const [punks, setPunks] = useState([])
   const [model, setModel] = useState(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const inputText = useRef()
   let gan_contract
   try {
     gan_contract = props.externalContracts[props.selectedChainId].contracts.GAN_PUNK  
@@ -22,8 +23,28 @@ export default function OthersPunks(props) {
     console.error(e)
   }
 
+  useEffect(async () => {
+    if (!gan_contract) return setErrorMessage('No network selected in your wallet')
+    setErrorMessage('')
+    const model = await tf.loadLayersModel(window.location.origin + '/model.json')
+    setModel(model)
+    const urlParams = new URLSearchParams(window.location.search)
+    const search = urlParams.get('search')
+    const parsed = parseInt(search)
+    if (!Number.isNaN(parsed)) {
+      inputText.current.value = search
+      let contract = new ethers.Contract(gan_contract.address, gan_contract.abi, props.signer)
+      let latentSpace = await contract.latentSpaceOf(parsed)
+      latentSpace = latentSpace.map((el) => parseFloat(el))
+      setPunks([latentSpace])
+      setErrorMessage('')
+    }
+  }, [props.selectedChainId])
+
   useEffect(async function () {
     if (!address) return
+    if (!gan_contract) return setErrorMessage('No network selected in your wallet')
+    setErrorMessage('')
     try {
       const model = await tf.loadLayersModel(window.location.origin + '/model.json')
       setModel(model)
@@ -65,11 +86,12 @@ export default function OthersPunks(props) {
 
   return (
     <div><ToastContainer />
-    <TextField variant="outlined" sx={{ marginTop: 2 }} label="address or ens name"
+    <TextField ref={inputText} variant="outlined" sx={{ marginTop: 2 }} label="address or ens name"
       onChange={(e) => {
         setAddress(e.target.value)
       }}
-    /><div>{punks.length} punk(s)</div><ImageList cols={5} sx={{ width: 5*24*3, margin: 'auto' }} >
+    /><div>{punks.length} punk(s)</div>
+    <ImageList cols={5} sx={{ width: 5*24*6, margin: 'auto' }} >
       {punks.map((item, index) => (
         <ImageListItem className="mypunks">
           <canvas index={index} width="24" height="24" ></canvas>   

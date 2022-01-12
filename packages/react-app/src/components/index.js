@@ -24,3 +24,4 @@ export { default as NetworkSwitch } from "./NetworkSwitch";
 export { default as ListPunks } from "./ListPunks";
 export { default as MyPunks } from "./MyPunks";
 export { default as OthersPunks } from "./OthersPunks";
+export { default as CustomPunk } from "./CustomPunk";
