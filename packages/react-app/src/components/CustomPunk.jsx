@@ -188,7 +188,8 @@ function loadGraph (points, cbInput, cbReload) {
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   x.domain(d3.extent(points, function(d) { return d[0]; }));
-  y.domain(d3.extent(points, function(d) { return d[1]; }));
+  y.domain([-4, 4])
+  //y.domain(d3.extent(points, function(d) { return d[1]; }));
 
   var line = d3.line()
     .x(function(d) { return x(d[0]); })
